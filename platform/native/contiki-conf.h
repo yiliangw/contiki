@@ -158,6 +158,11 @@ typedef unsigned short uip_stats_t;
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
+#ifdef UDP_RADIO
+#include "udpradio-drv.h"
+#define NETSTACK_CONF_RADIO udpradio_driver
+#endif /* UDP_RADIO */
+
 #include <ctype.h>
 #define ctk_arch_isprint isprint
 

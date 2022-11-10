@@ -17,7 +17,13 @@ ifeq ($(HOST_OS),Windows)
 CONTIKI_TARGET_SOURCEFILES += wpcap-drv.c wpcap.c
 TARGET_LIBFILES = /lib/w32api/libws2_32.a /lib/w32api/libiphlpapi.a
 else
-CONTIKI_TARGET_SOURCEFILES += tapdev-drv.c linuxradio-drv.c
+CONTIKI_TARGET_SOURCEFILES += tapdev-drv.c
+  ifeq ($(UDP_RADIO),1)
+  CONTIKI_TARGET_SOURCEFILES += udpradio-drv.c
+  CFLAGS += -DUDP_RADIO=1 -I$(CONTIKI)/cpu/native/net
+  else
+  CONTIKI_TARGET_SOURCEFILES += linuxradio-drv.c
+  endif
 #math
 ifneq ($(CONTIKI_WITH_IPV6),1)
 CONTIKI_TARGET_SOURCEFILES += tapdev.c
