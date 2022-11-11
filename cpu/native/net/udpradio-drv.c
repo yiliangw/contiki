@@ -4,6 +4,7 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -26,6 +27,9 @@ static int sockfd = -1;
 static int clientfd = -1;
 static char *sockbuf;
 static int buflen;
+
+static int serverport_inited = 0;
+static in_port_t radioserver_port = 52001;
 
 #define MAX_PACKET_SIZE 256
 
@@ -114,13 +118,25 @@ handle_fd(fd_set *rset, fd_set *wset)
 
 static const struct select_callback udpradio_sock_callback = { set_fd, handle_fd };
 
-/* Dynamic later. */
-#define SRV_PORT    52001
 
 static int
 on(void)
 {
   struct sockaddr_in srv_addr;
+  FILE *f;
+  int r;
+
+  if(!serverport_inited) {
+    f = fopen("radioserver-port.cfg", "r");
+    r = fscanf(f, "%hu", &radioserver_port);
+    fclose(f);
+    if(r == EOF) {
+      printf("Invalid port in radioserver-port.cfg, using default: %hu\n", radioserver_port);
+    } else {
+      printf("Using linuxudp radio with server port: %hu\n", radioserver_port);
+    }
+    serverport_inited = 1;
+  }
 
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd < 0) {
@@ -129,7 +145,7 @@ on(void)
   } 
 
   srv_addr.sin_family = AF_INET;
-  srv_addr.sin_port = htons(SRV_PORT);
+  srv_addr.sin_port = htons(radioserver_port);
   inet_pton(AF_INET, "127.0.0.1", &srv_addr.sin_addr);
 
   clientfd = connect(sockfd, (struct sockaddr*)&srv_addr, sizeof srv_addr);
